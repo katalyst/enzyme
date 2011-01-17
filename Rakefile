@@ -15,12 +15,31 @@ Jeweler::Tasks.new do |gem|
   gem.name = "enzyme"
   gem.homepage = "http://github.com/katalyst/enzyme"
   gem.license = "MIT"
-  gem.summary = %Q{TODO: one-line summary of your gem}
-  gem.description = %Q{TODO: longer description of your gem}
+  gem.summary = %Q{Katalyst's project collaboration tool.}
+  gem.description = %Q{Enzyme is a tool developed by Katalyst to make collaborating on projects easier.}
   gem.email = "haydn@katalyst.com.au"
   gem.authors = ["Haydn Ewers"]
+  gem.files = [
+    "bin/enzyme",
+    "lib/commands/config.rb",
+    "lib/commands/create.rb",
+#     "lib/commands/join.rb",
+    "lib/commands/list.rb",
+#     "lib/commands/open.rb",
+    "lib/commands/sync.rb",
+    "lib/commands/tasks.rb",
+    "lib/commands/view.rb",
+    "lib/enzyme.rb",
+    "lib/hash.rb",
+    "lib/settings.rb",
+    "lib/setup.rb",
+    "VERSION"
+  ]
+  gem.executables = ["enzyme"]
+  gem.require_paths = ["lib"]
   # Include your dependencies below. Runtime dependencies are required when using your gem,
   # and development dependencies are only needed for development (ie running rake tasks, tests, etc)
+  # gem.add_runtime_dependency 'octopi', '> 0.4.0'
   #  gem.add_runtime_dependency 'jabber4r', '> 0.1'
   #  gem.add_development_dependency 'rspec', '> 1.2.3'
 end

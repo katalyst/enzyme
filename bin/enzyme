@@ -1,0 +1,12 @@
+#!/usr/bin/env ruby
+
+lib_dir = File.join(File.dirname(__FILE__), '..', 'lib')
+$LOAD_PATH.unshift lib_dir if File.directory?(lib_dir)
+
+require 'setup'
+require 'enzyme'
+
+# Require all commands in the commands directory.
+Dir["#{lib_dir}/commands/*.rb"].each {|file| require "commands/"+File.basename(file, ".rb") }
+
+Enzyme.run()
