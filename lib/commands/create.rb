@@ -10,9 +10,15 @@ module Create extend self
     project_type = ARGV.shift
 
     if project_name
-      case project_type and project_type.to_sym
-      when :pms
-        pms(project_name)
+      if project_type
+        case project_type.to_sym
+        when :pms
+          pms(project_name)
+        when :koi
+          koi(project_name)
+        else
+          Enzyme.error("Unknown project type `#{project_type}`.")
+        end
       else
         base(project_name)
       end
@@ -22,6 +28,11 @@ module Create extend self
   end
 
   def base(project_name)
+    unless $settings.projects_directory
+      Enzyme.error("The `sync.projects_directory` setting is not set. Set it using `enzyme config projects_directory \"/Users/me/Projects\"`.")
+      return
+    end
+
     system "mkdir #{$settings.projects_directory}/#{project_name}"
     system "mkdir #{$settings.projects_directory}/#{project_name}/resources"
     system "mkdir #{$settings.projects_directory}/#{project_name}/resources/client"
@@ -34,10 +45,25 @@ module Create extend self
   end
 
   def koi(project_name)
-    #
+    Enzyme.error("Koi projects are not avaliable in this version of Enzyme (#{$version}).")
   end
 
   def pms(project_name)
+    unless $settings.projects_directory
+      Enzyme.error("The `sync.projects_directory` setting is not set. Set it using `enzyme config projects_directory \"/Users/me/Projects\"`.")
+      return
+    end
+
+    unless $settings.github.user
+      Enzyme.error("The `sync.github.user` setting is not set. Set it using `enzyme config github.user \"me\"`.")
+      return
+    end
+
+    unless $settings.github.token
+      Enzyme.error("The `sync.github.token` setting is not set. Set it using `enzyme config github.token \"0123456789abcdef0123456789abcdef\"`.")
+      return
+    end
+
     base(project_name)
 
     Config.set('project_type', 'pms')
@@ -60,12 +86,12 @@ Enzyme.register(Create) do
   puts ''
   puts '### SYNOPSIS'
   puts ''
-  puts '    enzyme create project_name [type]'
+  puts '    enzyme create project_name [pms]'
   puts ''
   puts '### EXAMPLES'
   puts ''
   puts '    enzyme create my_project pms'
-  puts ''
-  puts '    enzyme create another_project koi'
+  # puts ''
+  # puts '    enzyme create another_project koi'
   puts ''
 end

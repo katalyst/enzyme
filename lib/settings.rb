@@ -1,5 +1,5 @@
-# From: http://mjijackson.com/2010/02/flexible-ruby-config-objects
-# Author: Michael Jackson
+# Based on: http://mjijackson.com/2010/02/flexible-ruby-config-objects
+# Authors: Michael Jackson, Haydn Ewers
 class Settings
 
   def initialize(data={})
@@ -23,6 +23,14 @@ class Settings
     else
       @data[key.to_sym] = value
     end
+  end
+
+  def to_hash
+    @data.to_hash
+  end
+
+  def to_s
+    @data.to_s
   end
 
   def method_missing(sym, *args)

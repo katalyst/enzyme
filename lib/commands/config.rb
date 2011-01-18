@@ -17,7 +17,12 @@ module Config extend self
     unless value === nil
       set(key, value, global)
     else
-      puts get(key)
+      val = get(key)
+      if val.is_a?(Array) || val.is_a?(Hash) || val.is_a?(Settings)
+        puts val.to_hash.to_yaml
+      else
+        puts val.to_s
+      end
     end
   end
 

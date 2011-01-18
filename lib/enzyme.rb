@@ -4,13 +4,11 @@ module Enzyme extend self
 
   def run
     # Only shift the first argument off the ARGV if help flags haven't been passed.
-    command = (ARGV.delete("-h") || ARGV.delete("--help")) ? 'help' : ARGV.shift
+    command = (ARGV.delete("-h") || ARGV.delete("--help")) ? 'help' : (ARGV.shift || 'help')
 
     # Show info, help or run the requested command if it has been registered.
     begin
-      info if command.eql?('info') || command.eql?(nil)
-
-      if command.eql?('help') || command.eql?(nil)
+      if command.eql?('help')
         help
       else
         if @@commands.include?(command.to_s.downcase)
@@ -39,6 +37,8 @@ module Enzyme extend self
     ARGV.reject { |x| x.start_with?("-") }
     command = ARGV.shift
 
+    info
+
     if command
       if @@commands.include?(command.to_s.downcase)
         @@commands[command.to_s.downcase][:help].call
@@ -53,17 +53,16 @@ module Enzyme extend self
       puts ''
       puts '    enzyme config [key [value [--global]]]'
       puts '    enzyme create project_name [type]'
-      puts '    enzyme join project_name'
+      # puts '    enzyme join project_name'
       puts '    enzyme sync [project_name]'
       puts ''
-      puts '### Misc'
+      puts '### Help'
       puts ''
       puts '    enzyme help [command]'
       puts '    enzyme [command] --help'
       puts '    enzyme [command] -h'
-      puts '    enzyme info'
       puts ''
-      puts '### Stacktraces'
+      puts '### Debugging'
       puts ''
       puts 'Use `--trace` at anytime to get full stacktraces.'
       puts ''
