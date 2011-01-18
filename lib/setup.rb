@@ -2,6 +2,9 @@ require 'yaml'
 require 'hash'
 require 'settings'
 
+# Make sure there's a global settings file.
+system "touch \"#{ENV['HOME']}/.enzyme.yml\"" unless File.exist?("#{ENV['HOME']}/.enzyme.yml")
+
 # Default settings.
 config = {
   :github => {
@@ -10,9 +13,9 @@ config = {
   }
 }
 # Global settings.
-config = config.deep_merge(YAML.load_file("#{ENV['HOME']}/.enzyme.yml")) if File.exist?("#{ENV['HOME']}/.enzyme.yml")
+config = config.deep_merge(YAML.load_file("#{ENV['HOME']}/.enzyme.yml") || {}) if File.exist?("#{ENV['HOME']}/.enzyme.yml")
 # Project settings.
-config = config.deep_merge(YAML.load_file("./.enzyme.yml")) if File.exist?("./.enzyme.yml")
+config = config.deep_merge(YAML.load_file("./.enzyme.yml") || {}) if File.exist?("./.enzyme.yml")
 
 # Global settings object.
 $settings = Settings.new(config)
