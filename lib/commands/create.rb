@@ -1,6 +1,5 @@
 require 'enzyme'
 require 'commands/config'
-require 'commands/help'
 
 module Create extend self
 
