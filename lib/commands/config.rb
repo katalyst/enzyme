@@ -58,7 +58,7 @@ Enzyme.register(Config) do
   puts ''
   puts '### SYNOPSIS'
   puts ''
-  puts '    enzyme config [key [value [--global]]]'
+  puts '    enzyme config [<key> [<value> [--global]]]'
   puts ''
   puts '### EXAMPLES'
   puts ''

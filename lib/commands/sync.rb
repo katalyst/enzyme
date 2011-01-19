@@ -54,7 +54,7 @@ Enzyme.register(Sync) do
   puts ''
   puts '### SYNOPSIS'
   puts ''
-  puts '    enzyme sync [project_name]'
+  puts '    enzyme sync [<project_name>]'
   puts ''
   puts '### EXAMPLES'
   puts ''

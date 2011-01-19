@@ -85,7 +85,7 @@ Enzyme.register(Create) do
   puts ''
   puts '### SYNOPSIS'
   puts ''
-  puts '    enzyme create project_name [pms]'
+  puts '    enzyme create <project_name> [pms | koi]'
   puts ''
   puts '### EXAMPLES'
   puts ''
