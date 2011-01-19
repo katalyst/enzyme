@@ -24,4 +24,4 @@ $settings = Settings.new(config)
 $trace_errors = ARGV.delete('--trace')
 
 # Version number.
-$version = "0.1.2"
+$version = "0.1.3"
