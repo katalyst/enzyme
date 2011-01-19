@@ -16,25 +16,29 @@ module Create extend self
         when :koi
           koi(project_name)
         else
-          Enzyme.error("Unknown project type `#{project_type}`.")
+          raise "Unknown project type `#{project_type}`."
         end
       else
         base(project_name)
       end
+      puts "Complete."
     else
-      Enzyme.error("A project name must be given. For example: `enzyme create project_name`")
+      raise "A project name must be given. For example: `enzyme create project_name`"
     end
   end
 
   def base(project_name)
-    unless $settings.projects_directory
-      Enzyme.error("The `sync.projects_directory` setting is not set. Set it using `enzyme config projects_directory \"/Users/me/Projects\"`.")
-      return
-    end
+    raise "The `projects_directory` setting is not set. Set it using `enzyme config projects_directory \"/Users/me/Projects\" --global`." unless $settings.projects_directory
+    raise "The `sync.shared_directory` setting is not set. Set it using `enzyme config sync.shared_directory \"shared\" --global`." unless $settings.sync.shared_directory
+    raise "The `user` setting is not set. Set it using `enzyme config user \"me\" --global`." unless $settings.user
+
+    puts "Creating the #{project_name} project at #{$settings.projects_directory}/#{project_name}..."
 
     system "mkdir #{$settings.projects_directory}/#{project_name}"
+    # TODO: Move the resources directory and it's content to the sync command. Create shouldn't be responsible for it.
     system "mkdir #{$settings.projects_directory}/#{project_name}/resources"
-    system "mkdir #{$settings.projects_directory}/#{project_name}/resources/client"
+    system "mkdir #{$settings.projects_directory}/#{project_name}/resources/#{$settings.sync.shared_directory}"
+    system "mkdir #{$settings.projects_directory}/#{project_name}/resources/#{$settings.user}"
     system "touch #{$settings.projects_directory}/#{project_name}/.enzyme.yml"
 
     Dir.chdir("#{$settings.projects_directory}/#{project_name}")
@@ -44,24 +48,13 @@ module Create extend self
   end
 
   def koi(project_name)
-    Enzyme.error("Koi projects are not avaliable in this version of Enzyme (#{$version}).")
+    raise "Koi projects are not avaliable in this version of Enzyme (#{$version})."
   end
 
   def pms(project_name)
-    unless $settings.projects_directory
-      Enzyme.error("The `sync.projects_directory` setting is not set. Set it using `enzyme config projects_directory \"/Users/me/Projects\"`.")
-      return
-    end
-
-    unless $settings.github.user
-      Enzyme.error("The `sync.github.user` setting is not set. Set it using `enzyme config github.user \"me\"`.")
-      return
-    end
-
-    unless $settings.github.token
-      Enzyme.error("The `sync.github.token` setting is not set. Set it using `enzyme config github.token \"0123456789abcdef0123456789abcdef\"`.")
-      return
-    end
+    raise "The `sync.projects_directory` setting is not set. Set it using `enzyme config projects_directory \"/Users/me/Projects\" --global`." unless $settings.projects_directory
+    raise "The `sync.github.user` setting is not set. Set it using `enzyme config github.user \"me\" --global`." unless $settings.github.user
+    raise "The `sync.github.token` setting is not set. Set it using `enzyme config github.token \"0123456789abcdef0123456789abcdef\" --global`." unless $settings.github.token
 
     base(project_name)
 
