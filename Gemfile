@@ -3,6 +3,11 @@ source "http://rubygems.org"
 # Example:
 #   gem "activesupport", ">= 2.3.5"
 
+gem 'rake', '0.9.2'
+
+gem "typhoeus", ">= 0.2.4"
+gem "json", ">= 1.5.1"
+
 # Add dependencies to develop your gem here.
 # Include everything needed to run rake, tests, features, etc.
 group :development do

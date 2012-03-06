@@ -23,16 +23,14 @@ Jeweler::Tasks.new do |gem|
     "bin/enzyme",
     "lib/commands/config.rb",
     "lib/commands/create.rb",
-#     "lib/commands/join.rb",
+    "lib/commands/join.rb",
     "lib/commands/list.rb",
-#     "lib/commands/open.rb",
     "lib/commands/sync.rb",
-    "lib/commands/tasks.rb",
-    "lib/commands/view.rb",
+    "lib/commands/issues.rb",
     "lib/enzyme.rb",
     "lib/hash.rb",
-    "lib/settings.rb",
     "lib/setup.rb",
+    "lib/string.rb",
     "VERSION"
   ]
   gem.executables = ["enzyme"]
