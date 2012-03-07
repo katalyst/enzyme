@@ -1,6 +1,3 @@
-require 'yaml'
-require 'hash'
-require 'string'
 require 'enzyme'
 
 module Config extend self

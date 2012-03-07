@@ -1,3 +1,5 @@
+require 'setup'
+
 module Enzyme extend self
 
   @@commands = {}

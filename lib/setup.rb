@@ -1,5 +1,6 @@
 require 'yaml'
 require 'hash'
+require 'string'
 
 # Global formatiing helpers.
 $format = {}
