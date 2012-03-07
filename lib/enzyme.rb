@@ -39,7 +39,7 @@ module Enzyme extend self
     puts '     Katalyst\'s project collaboration tool.'
     puts
     puts "#{$format.bold}VERSION#{$format.normal}"
-    puts "     #{$version}"
+    puts "     #{$system_settings.version}"
     puts
     help
   end
@@ -75,7 +75,7 @@ module Enzyme extend self
   end
 
   def error(error)
-    if $trace_errors
+    if $system_settings.trace_errors
       raise error
     else
       puts "#{$format.bold}ERROR: #{error}#{$format.normal}"
