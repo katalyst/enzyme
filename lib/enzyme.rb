@@ -65,11 +65,12 @@ module Enzyme extend self
       puts
       puts "#{$format.bold}COMMANDS#{$format.normal}"
 
-      @@commands.keys.sort.each { |command| puts "     #{command}" }
+      ([ "info" ]+@@commands.keys).sort.each { |command| puts "     #{command}" }
 
       puts
       puts "#{$format.bold}DEBUGGING#{$format.normal}"
       puts '     Use `--trace` at anytime to get full stacktraces.'
+      puts '     Use `--skip-sync-server` to prevent the sync server from mounting automatically.'
       puts
     end
   end
