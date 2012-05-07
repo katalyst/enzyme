@@ -5,9 +5,9 @@
 
 Gem::Specification.new do |s|
   s.name = %q{enzyme}
-  s.version = "0.1.4"
+  s.version = "1.0.0.beta01"
 
-  s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
+  s.required_rubygems_version = Gem::Requirement.new("> 1.3.1") if s.respond_to? :required_rubygems_version=
   s.authors = [%q{Haydn Ewers}]
   s.date = %q{2012-05-07}
   s.description = %q{Enzyme is a tool to make collaborating on projects easier. Developed by Katalyst Interactive.}
@@ -22,10 +22,10 @@ Gem::Specification.new do |s|
     "bin/enzyme",
     "lib/commands/config.rb",
     "lib/commands/create.rb",
-    "lib/commands/issues.rb",
     "lib/commands/join.rb",
     "lib/commands/sync.rb",
     "lib/enzyme.rb",
+    "lib/errors.rb",
     "lib/hash.rb",
     "lib/setup.rb",
     "lib/string.rb"
