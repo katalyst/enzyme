@@ -19,7 +19,7 @@ module Create extend self
 
   def create(project_name)
     raise SyncServerRequired.new unless $system_settings.sync_server.exists
-    raise SettingMissing.new("projects_directory") unless $settings.projects_directory
+    raise SettingMissing.new("sync.projects_directory", "path/to/directory", "organisation") unless $settings.sync.projects_directory
 
     directory = "#{$system_settings.sync_server.path}/#{$settings.sync.projects_directory}/#{project_name}"
 

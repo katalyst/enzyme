@@ -46,7 +46,11 @@ module Config extend self
   # - value: The value to set the setting to.
   # - file: Which config file to set the setting in.
   def set(key, value, file=nil)
-    file = file.nil? ? 'global' : file.to_s
+    if file.nil?
+      file = $system_settings.config.project.exists ? "project" : "global"
+    else
+      file = file.nil? ? 'global' : file.to_s
+    end
 
     # Bail if the config file doesn't exist.
     raise ConfigFileNotFound.new($system_settings.config[file].path) unless $system_settings.config[file].exists

@@ -42,11 +42,9 @@ $settings.sync.projects_directory = nil
 $settings.sync.share_name         = nil
 
 # Global settings.
-if File.exist?($system_settings.config.global.path)
-  # Note the global config file's existence.
-  $system_settings.config.global.exists = true
-  $settings = $settings.deep_merge(YAML.load_file($system_settings.config.global.path) || {})
-end
+system "touch #{$system_settings.config.global.path}" unless File.exist?($system_settings.config.global.path)
+$system_settings.config.global.exists = true
+$settings = $settings.deep_merge(YAML.load_file($system_settings.config.global.path) || {})
 
 # Sync server.
 if !$system_settings.sync_server.skip && $settings.sync.host_name && $settings.sync.share_name
@@ -69,14 +67,14 @@ if !$system_settings.sync_server.skip && $settings.sync.host_name && $settings.s
   if File.directory?($system_settings.sync_server.path)
     # Note the sync_server's existence.
     $system_settings.sync_server.exists = true
-    # If the organisation config file doesn't exist yet, create it.
-    `touch #{$system_settings.config.organisation.path}` unless File.exist?($system_settings.config.organisation.path)
+
+    # Organisation settings.
+    system "touch #{$system_settings.config.organisation.path}" unless File.exist?($system_settings.config.organisation.path)
+    $system_settings.config.organisation.exists = true
   end
 
   # Organisation settings.
-  if $system_settings.sync_server.exists
-    # Note the organisation config file's existence.
-    $system_settings.config.organisation.exists = true
+  if $system_settings.sync_server.exists && $system_settings.config.organisation.exists
     # Merge the organisation settings.
     $settings = $settings.deep_merge(YAML.load_file($system_settings.config.organisation.path) || {})
     # Merge the global settings again (they have a higher priority).
