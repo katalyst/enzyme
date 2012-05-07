@@ -24,4 +24,4 @@ Contributing
 Copyright
 ---------
 
-Copyright (c) 2011 Katalyst Interactive. See LICENSE.txt for further details.
+Copyright (c) 2012 Katalyst Interactive. See LICENSE.txt for further details.

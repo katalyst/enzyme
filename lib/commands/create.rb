@@ -1,131 +1,100 @@
 require 'enzyme'
 require 'commands/config'
-require 'commands/sync'
+require 'commands/join'
 
 module Create extend self
 
   def run()
-    ARGV.reject { |x| x.start_with?("-") }
-    @@project_name = ARGV.shift
-    @@project_template = ARGV.shift
+    skip_join = !!ARGV.delete("--skip-join")
+    ARGV.each { |x| raise UnknownOption.new(x) if x.start_with?("-") }
+    project_name = ARGV.shift
+    ARGV.each { |x| raise UnknownArgument.new(x) }
 
-    Config.prompt_for('projects_directory', true)
+    raise ArgumentMissing.new("project_name") unless project_name
 
-    if @@project_name
-      if @@project_template
-        case @@project_template.to_sym
-        when :koi
-          @@project_template = 'katalyst/koi_cms'
-        end
-        specific
-      else
-        base
-      end
+    create(project_name)
 
-      # Try to init the sync.
-      Sync.init(@@project_name) rescue raise "Unabled to init sync. Run 'enzyme sync --init' to initialise sync."
-
-      puts "#{$format.bold}Project created at '#{Config.get('projects_directory')}/#{@@project_name}'.#{$format.normal}"
-      puts
-    else
-      raise "A project name must be given. For example: 'enzyme create abc-v2'"
-    end
+    Join.join(project_name) unless skip_join
   end
 
-  def base
-    # Tell the user what is happening.
-    puts "#{$format.bold}Creating '#{Config.get('projects_directory')}/#{@@project_name}'...#{$format.normal}"
+  def create(project_name)
+    raise SyncServerRequired.new unless $system_settings.sync_server.exists
+    raise SettingMissing.new("projects_directory") unless $settings.projects_directory
+
+    directory = "#{$system_settings.sync_server.path}/#{$settings.sync.projects_directory}/#{project_name}"
+
+    # If the project already exists, raise an error.
+    raise ProjectAlreadyExists.new(directory) if File.directory?(directory)
+
+    create_repo directory, [ "*", "!.enzyme.yml", "!.gitignore" ]
+    Config.write("#{directory}/.enzyme.yml", { "project_name" => project_name })
+    commit_repo directory
+    detach_repo directory
+
+    create_repo "#{directory}/shared"
+    commit_repo "#{directory}/shared"
+    detach_repo "#{directory}/shared"
+
+    create_repo "#{directory}/working"
+    commit_repo "#{directory}/working"
+    detach_repo "#{directory}/working"
+
+    puts "Created remote project at:"
     puts
-    sleep 2
+    puts "    #{directory}"
+    puts
+  end
 
-    # If the project already exists, raise don't do anything.
-    raise "A project already exists at '#{Config.get('projects_directory')}/#{@@project_name}'." if File.directory?("#{Config.get('projects_directory')}/#{@@project_name}")
-
+  def create_repo(path, gitignore=[])
     # Create the project's directory.
-    system "mkdir #{Config.get('projects_directory')}/#{@@project_name}"
+    system "mkdir -p #{path} > /dev/null"
 
     # Change into the directory.
-    system "cd #{Config.get('projects_directory')}/#{@@project_name}"
-    Dir.chdir("#{Config.get('projects_directory')}/#{@@project_name}")
+    system "cd #{path} > /dev/null"
+    Dir.chdir(path)
 
-    # Set a default settings (creates .enzyme.yml).
-    Config.set('project_name', @@project_name)
-    Config.set('project_template', nil)
-
-    # Initialise Git & Git-Flow.
-    puts "#{$format.bold}Initialising Git & Git-Flow...#{$format.normal}"
-    puts
-    sleep 2
-    system "git flow init"
-    puts
-
-    # Create and commit the VERSION file.
-    puts "#{$format.bold}Creating & committing the VERSION file...#{$format.normal}"
-    puts
-    sleep 2
-    system "echo '0.0.0' > VERSION"
-    system "git add VERSION"
-    system "git commit -v -m 'Added the VERSION file.'"
-    puts
-
-    # Add the enzyme config file to gitignore.
-    puts "#{$format.bold}Adding '.enzyme.yml' to gitignore...#{$format.normal}"
-    puts
-    sleep 2
-    system "echo '.enzyme.yml' >> .gitignore"
-    system "git add .gitignore"
-    system "git commit -m 'Added .enzyme.yml to gitignore.'"
-    puts
+    # Gitify.
+    system "git init > /dev/null"
+    system "echo '#{gitignore.join("\n")}' > .gitignore"
   end
 
-  def specific
-    Config.prompt_for('github.user', true)
-    Config.prompt_for('github.token', true)
+  def commit_repo(path)
+    # Create the project's directory.
+    system "mkdir -p #{path} > /dev/null"
 
-    base
+    # Change into the directory.
+    system "cd #{path} > /dev/null"
+    Dir.chdir(path)
 
-    Config.set('project.template', @@project_template)
+    # Gitify.
+    system "git add . > /dev/null"
+    system "git commit -m 'Initial commit.' > /dev/null"
+  end
 
-    system "cd #{Config.get('projects_directory')}/#{@@project_name}"
-    Dir.chdir("#{Config.get('projects_directory')}/#{@@project_name}")
+  def detach_repo(path)
+    # Create the project's directory.
+    system "mkdir -p #{path} > /dev/null"
 
-    puts "Downloading project template from 'https://github.com/#{@@project_template}/zipball/master'..."
-    puts
-    system "curl -o '/tmp/#{@@project_name}.zip' -F 'login=#{Config.get('github.user')}' -F 'token=#{Config.get('github.token')}' -L 'https://github.com/#{@@project_template}/zipball/master'"
-    puts
+    # Change into the directory.
+    system "cd #{path} > /dev/null"
+    Dir.chdir(path)
 
-    puts 'Extracting...'
-    puts
-
-    system "unzip -q '/tmp/#{@@project_name}.zip' -d '/tmp/#{@@project_name}.temp'"
-    system "rm '/tmp/#{@@project_name}.zip'"
-    extracted_dir = Dir.entries("/tmp/#{@@project_name}.temp")[2]
-    puts
-
-    puts "Copying to '#{Config.get('projects_directory')}/#{@@project_name}/'..."
-    puts
-
-    system "mv -nf /tmp/#{@@project_name}.temp/#{extracted_dir}/* /tmp/#{@@project_name}.temp/#{extracted_dir}/.* #{Config.get('projects_directory')}/#{@@project_name}"
-    system "rm -r '/tmp/#{@@project_name}.temp'"
-    puts
-
-    puts "Committing project base..."
-    puts
-
-    system("git add .")
-    system("git commit -va -m 'Imported project base from https://github.com/#{@@project_template}/zipball/master.'")
-    puts
+    # Gitify.
+    system "git checkout -q --detach > /dev/null"
   end
 
 end
 
 Enzyme.register('create', Create) do
   puts "#{$format.bold}SYNOPSIS#{$format.normal}"
-  puts '     enzyme create <project_name> [koi|<project_template>]'
+  puts '     enzyme create <project_name>'
   puts
   puts "#{$format.bold}EXAMPLES#{$format.normal}"
-  puts '     enzyme create prj koi # Creates a Koi project called \'prj\'.'
-  puts '     enzyme create prj katalyst/koi_cms # Creates a Koi project called \'prj\'.'
-  puts '     enzyme create prj unicorngames/horseshoe'
+  puts '     > enzyme create example-project'
+  puts '     '
+  puts '     Created local project at:'
+  puts '     '
+  puts '       `/Users/jane/Projects/example-project`'
+  puts '     '
   puts
 end

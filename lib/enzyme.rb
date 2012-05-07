@@ -6,13 +6,16 @@ module Enzyme extend self
 
   def run
     # Only shift the first argument off the ARGV if help flags haven't been passed.
-    command = (ARGV.delete("-h") || ARGV.delete("--help")) ? 'help' : (ARGV.shift || 'info')
+    command = (ARGV.delete("-h") || ARGV.delete("--help")) ? 'help' : ARGV.shift
 
     puts
 
     # Show info, help or run the requested command if it has been registered.
     begin
-      if command.eql?('info')
+      if command.nil?
+        info
+        help
+      elsif command.eql?('info')
         info
       elsif command.eql?('help')
         help
@@ -20,7 +23,7 @@ module Enzyme extend self
         if @@commands.include?(command)
           @@commands[command][:class].run
         else
-          error("Unable to find command `#{command}`.")
+          raise UnknownCommand.new(command)
         end
       end
     rescue StandardError => e
@@ -43,7 +46,6 @@ module Enzyme extend self
     puts "#{$format.bold}VERSION#{$format.normal}"
     puts "     #{$system_settings.version}"
     puts
-    help
   end
 
   def help
@@ -54,7 +56,7 @@ module Enzyme extend self
       if @@commands.include?(command.to_s.downcase)
         @@commands[command.to_s.downcase][:help].call
       else
-        error("No help available for `#{name}`.")
+        error("No help available for `#{command}`.")
       end
     else
       puts "#{$format.bold}SYNOPSIS#{$format.normal}"
@@ -83,7 +85,7 @@ module Enzyme extend self
     else
       puts "#{$format.bold}ERROR: #{error}#{$format.normal}"
       puts
-      puts '  Run `enzyme help` for help.'
+      puts '  Run `enzyme help` for help or use the `--trace` option to get a full stacktrace.'
       puts
     end
   end

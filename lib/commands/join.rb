@@ -1,37 +1,50 @@
 require 'enzyme'
 require 'commands/config'
-require 'commands/sync'
 
 module Join extend self
 
   def run()
-    ARGV.reject { |x| x.start_with?("-") }
-    @@project_name = ARGV.shift
+    # --skip-shared
+    # --skip-working
+    ARGV.each { |x| raise UnknownOption.new(x) if x.start_with?("-") }
+    project_name = ARGV.shift
+    ARGV.each { |x| raise UnknownArgument.new(x) }
 
-    if @@project_name
-      raise "The `projects_directory` setting is not set. Set it using `enzyme config projects_directory \"/Users/me/Projects\" --global`." unless $settings.projects_directory
-      raise "The `sync.shared_directory` setting is not set. Set it using `enzyme config sync.shared_directory \"shared\" --global`." unless $settings.sync.shared_directory
-      raise "The `user` setting is not set. Set it using `enzyme config user \"me\" --global`." unless $settings.user
+    raise ArgumentMissing.new("project_name") unless project_name
 
-      puts "Joining the '#{@@project_name}' project at '#{$settings.projects_directory}/#{@@project_name}'..."
-      puts
+    join(project_name)
+  end
 
-      # system "git clone #{$settings.projects_directory}/#{@@project_name}"
+  def join(project_name)
+    raise SyncServerRequired.new unless $system_settings.sync_server.exists
+    raise SettingMissing.new("projects_directory") unless $settings.projects_directory
+    raise SettingMissing.new("sync.projects_directory") unless $settings.sync.projects_directory
+    raise SettingMissing.new("short_name") unless $settings.short_name
 
-      system "mkdir #{$settings.projects_directory}/#{@@project_name}"
+    local_directory = "#{$settings.projects_directory}/#{project_name}"
+    remote_directory = "#{$system_settings.sync_server.path}/#{$settings.sync.projects_directory}/#{project_name}"
 
-      Dir.chdir("#{$settings.projects_directory}/#{@@project_name}")
+    # If the local project directory already exists, raise an error.
+    raise ProjectAlreadyExists.new(local_directory) if File.directory?(local_directory)
 
-      Sync.init(@@project_name)
+    # If the remote project directory doesn't exists, raise an error.
+    raise CannotFindProject.new(remote_directory) unless File.directory?(remote_directory)
 
-      Config.set('project_name', @@project_name)
-      Config.set('project_type', nil)
+    # Clone the shared and working directories.
+    system "git clone -q #{remote_directory} #{local_directory}"
+    system "cd #{local_directory}; git checkout -q master;"
+    system "git clone -q #{remote_directory}/shared #{local_directory}/shared"
+    system "cd #{local_directory}/shared; git checkout -q master;"
+    system "git clone -q #{remote_directory}/working #{local_directory}/working"
+    system "cd #{local_directory}/working; git checkout -q master;"
 
-      puts "Complete."
-      puts
-    else
-      raise "A project name must be given. For example: `enzyme join project_name`"
-    end
+    # Create the user's working directory unless it's already there.
+    system "mkdir #{local_directory}/working/#{$settings.short_name}" unless File.directory?("#{local_directory}/working/#{$settings.short_name}")
+
+    puts "Joined the '#{project_name}' project at:"
+    puts
+    puts "    #{local_directory}"
+    puts
   end
 
 end
