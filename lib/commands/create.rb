@@ -1,136 +1,100 @@
 require 'enzyme'
 require 'commands/config'
+require 'commands/join'
 
 module Create extend self
 
   def run()
-    ARGV.reject { |x| x.start_with?("-") }
-    @@project_name = ARGV.shift
-    @@project_type = ARGV.shift
+    skip_join = !!ARGV.delete("--skip-join")
+    ARGV.each { |x| raise UnknownOption.new(x) if x.start_with?("-") }
+    project_name = ARGV.shift
+    ARGV.each { |x| raise UnknownArgument.new(x) }
 
-    if @@project_name
-      if @@project_type
-        case @@project_type.to_sym
-        when :pms
-          pms
-        when :koi
-          koi
-        else
-          raise "Unknown project type `#{project_type}`."
-        end
-      else
-        base
-      end
-      puts
-      puts "Complete."
-      puts
-    else
-      raise "A project name must be given. For example: `enzyme create project_name`"
-    end
+    raise ArgumentMissing.new("project_name") unless project_name
+
+    create(project_name)
+
+    Join.join(project_name) unless skip_join
   end
 
-  def base
-    raise "The `projects_directory` setting is not set. Set it using `enzyme config projects_directory \"/Users/me/Projects\" --global`." unless $settings.projects_directory
-    raise "The `sync.shared_directory` setting is not set. Set it using `enzyme config sync.shared_directory \"shared\" --global`." unless $settings.sync.shared_directory
-    raise "The `user` setting is not set. Set it using `enzyme config user \"me\" --global`." unless $settings.user
+  def create(project_name)
+    raise SyncServerRequired.new unless $system_settings.sync_server.exists
+    raise SettingMissing.new("sync.projects_directory", "path/to/directory", "organisation") unless $settings.sync.projects_directory
 
-    @@project_name = @@project_name+'_'+Time.now.strftime('%y%m') unless @@project_name =~ /^.+_\d{4}$/
+    directory = "#{$system_settings.sync_server.path}/#{$settings.sync.projects_directory}/#{project_name}"
 
+    # If the project already exists, raise an error.
+    raise ProjectAlreadyExists.new(directory) if File.directory?(directory)
+
+    create_repo directory, [ "*", "!.enzyme.yml", "!.gitignore" ]
+    Config.write("#{directory}/.enzyme.yml", { "project_name" => project_name })
+    commit_repo directory
+    detach_repo directory
+
+    create_repo "#{directory}/shared"
+    commit_repo "#{directory}/shared"
+    detach_repo "#{directory}/shared"
+
+    create_repo "#{directory}/working"
+    commit_repo "#{directory}/working"
+    detach_repo "#{directory}/working"
+
+    puts "Created remote project at:"
     puts
-    puts "Creating the '#{@@project_name}' project at '#{$settings.projects_directory}/#{@@project_name}'..."
+    puts "    #{directory}"
     puts
-
-    system "mkdir #{$settings.projects_directory}/#{@@project_name}"
-    # TODO: Move the resources directory and it's content to the sync command. Create shouldn't be responsible for it.
-    system "mkdir #{$settings.projects_directory}/#{@@project_name}/resources"
-    system "mkdir #{$settings.projects_directory}/#{@@project_name}/resources/#{$settings.sync.shared_directory}"
-    system "mkdir #{$settings.projects_directory}/#{@@project_name}/resources/#{$settings.user}"
-    system "touch #{$settings.projects_directory}/#{@@project_name}/.enzyme.yml"
-
-    Dir.chdir("#{$settings.projects_directory}/#{@@project_name}")
-
-    Config.set('project_name', @@project_name)
-    Config.set('project_type', nil)
   end
 
-  def koi
-    raise "The `projects_directory` setting is not set. Set it using `enzyme config projects_directory \"/Users/me/Projects\" --global`." unless $settings.projects_directory
-    raise "The `github.user` setting is not set. Set it using `enzyme config github.user \"me\" --global`." unless $settings.github.user
-    raise "The `github.token` setting is not set. Set it using `enzyme config github.token \"0123456789abcdef0123456789abcdef\" --global`." unless $settings.github.token
+  def create_repo(path, gitignore=[])
+    # Create the project's directory.
+    system "mkdir -p #{path} > /dev/null"
 
-    base
+    # Change into the directory.
+    system "cd #{path} > /dev/null"
+    Dir.chdir(path)
 
-    Config.set('project_type', 'koi')
-
-    puts
-    puts "Downloading the latest version of Koi from 'https://github.com/katalyst/koi_cms/zipball/master'..."
-    puts
-
-    system "curl -o '/tmp/#{@@project_name}.zip' -F 'login=#{$settings.github.user}' -F 'token=#{$settings.github.token}' -L 'https://github.com/katalyst/koi_cms/zipball/master'"
-
-    puts
-    puts 'Extracting...'
-    puts
-
-    system "unzip '/tmp/#{@@project_name}.zip' -d '/tmp/#{@@project_name}.temp'"
-    system "rm '/tmp/#{@@project_name}.zip'"
-
-    extracted_dir = Dir.entries("/tmp/#{@@project_name}.temp")[2]
-
-    puts
-    puts "Copying to '#{$settings.projects_directory}/#{@@project_name}/'..."
-    puts
-
-    system "mv /tmp/#{@@project_name}.temp/#{extracted_dir}/* #{$settings.projects_directory}/#{@@project_name}"
-    system "rm -r '/tmp/#{@@project_name}.temp'"
+    # Gitify.
+    system "git init > /dev/null"
+    system "echo '#{gitignore.join("\n")}' > .gitignore"
   end
 
-  def pms
-    raise "The `projects_directory` setting is not set. Set it using `enzyme config projects_directory \"/Users/me/Projects\" --global`." unless $settings.projects_directory
-    raise "The `github.user` setting is not set. Set it using `enzyme config github.user \"me\" --global`." unless $settings.github.user
-    raise "The `github.token` setting is not set. Set it using `enzyme config github.token \"0123456789abcdef0123456789abcdef\" --global`." unless $settings.github.token
+  def commit_repo(path)
+    # Create the project's directory.
+    system "mkdir -p #{path} > /dev/null"
 
-    base
+    # Change into the directory.
+    system "cd #{path} > /dev/null"
+    Dir.chdir(path)
 
-    Config.set('project_type', 'pms')
+    # Gitify.
+    system "git add . > /dev/null"
+    system "git commit -m 'Initial commit.' > /dev/null"
+  end
 
-    puts
-    puts "Downloading v0.4.2alpha03 of the PMS from 'https://github.com/katalyst/pms/zipball/v0.4.2alpha03'..."
-    puts
+  def detach_repo(path)
+    # Create the project's directory.
+    system "mkdir -p #{path} > /dev/null"
 
-    system "curl -o '/tmp/#{@@project_name}.zip' -F 'login=#{$settings.github.user}' -F 'token=#{$settings.github.token}' -L 'https://github.com/katalyst/pms/zipball/v0.4.2alpha03'"
+    # Change into the directory.
+    system "cd #{path} > /dev/null"
+    Dir.chdir(path)
 
-    puts
-    puts 'Extracting...'
-    puts
-
-    system "unzip '/tmp/#{@@project_name}.zip' -d '/tmp/#{@@project_name}.temp'"
-    system "rm '/tmp/#{@@project_name}.zip'"
-
-    extracted_dir = Dir.entries("/tmp/#{@@project_name}.temp")[2]
-
-    puts
-    puts "Copying to '#{$settings.projects_directory}/#{@@project_name}/'..."
-    puts
-
-    system "mv /tmp/#{@@project_name}.temp/#{extracted_dir}/* #{$settings.projects_directory}/#{@@project_name}"
-    system "rm -r '/tmp/#{@@project_name}.temp'"
+    # Gitify.
+    system "git checkout -q --detach > /dev/null"
   end
 
 end
 
-Enzyme.register(Create) do
-  puts 'CREATE COMMAND'
-  puts '--------------'
-  puts ''
-  puts '### SYNOPSIS'
-  puts ''
-  puts '    enzyme create <project_name> [pms | koi]'
-  puts ''
-  puts '### EXAMPLES'
-  puts ''
-  puts '    enzyme create my_project pms'
-  puts ''
-  puts '    enzyme create another_project koi'
-  puts ''
+Enzyme.register('create', Create) do
+  puts "#{$format.bold}SYNOPSIS#{$format.normal}"
+  puts '     enzyme create <project_name>'
+  puts
+  puts "#{$format.bold}EXAMPLES#{$format.normal}"
+  puts '     > enzyme create example-project'
+  puts '     '
+  puts '     Created local project at:'
+  puts '     '
+  puts '       `/Users/jane/Projects/example-project`'
+  puts '     '
+  puts
 end

@@ -16,23 +16,20 @@ Jeweler::Tasks.new do |gem|
   gem.homepage = "http://github.com/katalyst/enzyme"
   gem.license = "MIT"
   gem.summary = %Q{Katalyst's project collaboration tool.}
-  gem.description = %Q{Enzyme is a tool developed by Katalyst to make collaborating on projects easier.}
+  gem.description = %Q{Enzyme is a tool to make collaborating on projects easier. Developed by Katalyst Interactive.}
   gem.email = "haydn@katalyst.com.au"
   gem.authors = ["Haydn Ewers"]
   gem.files = [
     "bin/enzyme",
     "lib/commands/config.rb",
     "lib/commands/create.rb",
-#     "lib/commands/join.rb",
-    "lib/commands/list.rb",
-#     "lib/commands/open.rb",
+    "lib/commands/join.rb",
     "lib/commands/sync.rb",
-    "lib/commands/tasks.rb",
-    "lib/commands/view.rb",
     "lib/enzyme.rb",
+    "lib/errors.rb",
     "lib/hash.rb",
-    "lib/settings.rb",
     "lib/setup.rb",
+    "lib/string.rb",
     "VERSION"
   ]
   gem.executables = ["enzyme"]

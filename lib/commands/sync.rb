@@ -2,48 +2,76 @@ require 'enzyme'
 
 module Sync extend self
 
-  def run()
-    ARGV.reject { |x| x.start_with?("-") }
+  def run
+    skip_shared = !!ARGV.delete("--skip-shared")
+    skip_working = !!ARGV.delete("--skip-working")
+    ARGV.each { |x| raise UnknownOption.new(x) if x.start_with?("-") }
     project_name = ARGV.shift || $settings.project_name
+    ARGV.each { |x| raise UnknownArgument.new(x) }
 
-    raise "No project name specified. Ensure you're in the project's directory or set it specifically. Run `enzyme help sync` for help." unless project_name
-    raise "The #{project_name} project could not be found." unless File.exist?("#{$settings.projects_directory}/#{project_name}")
-    raise "The `sync.share_name` setting is not set. Set it using `enzyme config sync.share_name \"Share Name\" --global`." unless $settings.sync.share_name
-    raise "The `sync.host` setting is not set. Set it using `enzyme config sync.host \"Host._afpovertcp._tcp.local\" --global`." unless $settings.sync.host
-    raise "The `sync.projects_directory` setting is not set. Set it using `enzyme config sync.projects_directory \"My Projects Directory\" --global`." unless $settings.sync.projects_directory
-    raise "The `user` setting is not set. Set it using `enzyme config user \"my_directory\" --global`." unless $settings.user
-    raise "The `sync.shared_directory` setting is not set. Set it using `enzyme config sync.shared_directory \"our_shared_directory\" --global`." unless $settings.sync.shared_directory
+    raise ArgumentOrSettingMissing.new("project_name", "project_name") unless project_name
+    raise SettingMissing.new("projects_directory") unless $settings.projects_directory
 
-    # Mount the network volume. Only works on OS X.
-    system "mkdir \"/Volumes/#{$settings.sync.share_name}\""
-    system "mount -t afp \"afp://#{$settings.sync.host}/#{$settings.sync.share_name}\" \"/Volumes/#{$settings.sync.share_name}\""
-    system "mkdir \"/Volumes/#{$settings.sync.share_name}/#{$settings.sync.projects_directory}/#{project_name}\""
-    # Pull.
-    system "rsync -aH --stats -v -u --progress --exclude '#{$settings.user}/**' \"/Volumes/#{$settings.sync.share_name}/#{$settings.sync.projects_directory}/#{project_name}/\" '#{$settings.projects_directory}/#{project_name}/resources/'"
-    # Push.
-    system "rsync -aH --stats -v -u --progress --include '*/' --include '#{$settings.sync.shared_directory}/**' --include '#{$settings.user}/**' --exclude '*' '#{$settings.projects_directory}/#{project_name}/resources/' \"/Volumes/#{$settings.sync.share_name}/#{$settings.sync.projects_directory}/#{project_name}/\""
+    directory = "#{$settings.projects_directory}/#{project_name}"
+
+    raise CannotFindProject.new(directory) unless File.directory?(directory)
+
+    # BASE
+
+    system "cd #{directory}"
+    Dir.chdir("#{directory}")
+
+    system "git add .enzyme.yml > /dev/null"
+    system "git commit -m 'Enzyme sync.'"
+    system "git pull > /dev/null"
+    system "git push > /dev/null"
+
+    # SHARED
+
+    unless skip_shared
+      system "cd #{directory}/shared"
+      Dir.chdir("#{directory}/shared")
+
+      system "git checkout -q . > /dev/null"
+      system "git add . > /dev/null"
+      system "git commit -m 'Enzyme sync.'"
+      system "git pull > /dev/null"
+      system "git push > /dev/null"
+    end
+
+    # WORKING
+
+    system "cd #{directory}/working"
+    Dir.chdir("#{directory}/working")
+
+    system "git add #{$settings.short_name} > /dev/null"
+    system "git add -u > /dev/null"
+    system "git commit -a -m 'Enzyme sync.'"
+    system "git clean -fd > /dev/null"
+    system "git pull > /dev/null"
+    system "git push > /dev/null"
   end
 
 end
 
-Enzyme.register(Sync) do
-  puts 'SYNC COMMAND'
-  puts '------------'
-  puts ''
-  puts '### SYNOPSIS'
-  puts ''
-  puts '    enzyme sync [<project_name>]'
-  puts ''
-  puts '### OPTIONS'
-  puts ''
-  puts '<project_name>'
-  puts ':   The name of the project to sync. If the working directory is the root of a project this option does not need to be passed.'
-  puts ''
-  puts '### EXAMPLES'
-  puts ''
-  puts '    cd ~/Projects/my_project'
-  puts '    enzyme sync'
-  puts ''
-  puts '    enzyme sync another_project'
-  puts ''
+Enzyme.register('sync', Sync) do
+  puts "#{$format.bold}SYNOPSIS#{$format.normal}"
+  puts '     enzyme sync [<project_name>] [--discard-changes] [--init]'
+  puts
+  puts "#{$format.bold}DESCRIPTION#{$format.normal}"
+  puts '     Options:'
+  puts
+  puts "     #{$format.bold}<project_name>#{$format.normal}"
+  puts '             The name of the project to sync. If the working directory is the root of a project this option does not need to be passed.'
+  puts
+  puts "#{$format.bold}EXAMPLES#{$format.normal}"
+  puts '     You can run sync like this:'
+  puts
+  puts '     enzyme sync another_project'
+  puts '             If you specify a project you can run sync from anywhere.'
+  puts
+  puts '     cd ~/Projects/my_project'
+  puts '     enzyme sync'
+  puts '             When the working directory is the root of a project you can run sync without any arguments.'
+  puts
 end
