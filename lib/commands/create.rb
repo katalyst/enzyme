@@ -31,9 +31,9 @@ module Create extend self
     commit_repo directory
     detach_repo directory
 
-    create_repo "#{directory}/shared"
-    commit_repo "#{directory}/shared"
-    detach_repo "#{directory}/shared"
+    create_repo "#{directory}/resources"
+    commit_repo "#{directory}/resources"
+    detach_repo "#{directory}/resources"
 
     create_repo "#{directory}/working"
     commit_repo "#{directory}/working"

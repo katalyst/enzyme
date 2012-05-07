@@ -3,7 +3,7 @@ require 'enzyme'
 module Sync extend self
 
   def run
-    skip_shared = !!ARGV.delete("--skip-shared")
+    skip_resources = !!ARGV.delete("--skip-resources")
     skip_working = !!ARGV.delete("--skip-working")
     ARGV.each { |x| raise UnknownOption.new(x) if x.start_with?("-") }
     project_name = ARGV.shift || $settings.project_name
@@ -28,9 +28,9 @@ module Sync extend self
 
     # SHARED
 
-    unless skip_shared
-      system "cd #{directory}/shared"
-      Dir.chdir("#{directory}/shared")
+    unless skip_resources
+      system "cd #{directory}/resources"
+      Dir.chdir("#{directory}/resources")
 
       system "git checkout -q . > /dev/null"
       system "git add . > /dev/null"
