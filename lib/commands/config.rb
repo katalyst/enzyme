@@ -9,11 +9,21 @@ module Config extend self
     value = ARGV.shift
     ARGV.each { |x| raise UnknownArgument.new(x) }
 
-    unless value === nil
-      set(key, value, file)
-      puts "Set '#{key}' to '#{value}' in '#{$system_settings.config[file].path}'."
+    if file.nil?
+      file = $system_settings.config.project.exists ? "project" : "global"
     else
-      val = get(key, file)
+      file = file.to_s
+    end
+
+    raise ConfigFileNotFound.new($system_settings.config[file].path) unless $system_settings.config[file].exists
+
+    path = $system_settings.config[file].path
+
+    unless value === nil
+      set(key, value, path)
+      puts "Set '#{key}' to '#{value}' in '#{path}'."
+    else
+      val = get(key, path)
       if val.is_a?(Array) || val.is_a?(Hash)
         puts val.to_hash.to_yaml
       else
@@ -23,17 +33,11 @@ module Config extend self
     puts
   end
 
-  # Checks if the given setting has a value.
-  # - key: The setting to check.
-  def is_set?(key)
-    (get(key).nil? || get(key).empty?) ? false : true
-  end
-
   # Gets the value of a given setting.
   # - key: The setting to get.
-  # - file: If set, specifies which config file to get the setting from.
-  def get(key, file=nil)
-    s = file ? (YAML.load_file($system_settings.config[file.to_s].path) || {}) : $settings
+  # - path: The path to the config file to get the setting from.
+  def get(key, path)
+    s = file ? (YAML.load_file(path) || {}) : $settings
     key.to_s.split('.').each do |o|
       return nil if s[o].nil?
       s = s[o]
@@ -44,17 +48,8 @@ module Config extend self
   # Sets the value of the given setting.
   # - key: The setting to set.
   # - value: The value to set the setting to.
-  # - file: Which config file to set the setting in.
-  def set(key, value, file=nil)
-    if file.nil?
-      file = $system_settings.config.project.exists ? "project" : "global"
-    else
-      file = file.nil? ? 'global' : file.to_s
-    end
-
-    # Bail if the config file doesn't exist.
-    raise ConfigFileNotFound.new($system_settings.config[file].path) unless $system_settings.config[file].exists
-
+  # - path: The path to the config file to set the setting in.
+  def set(key, value, path)
     # FIXME: This could be simplified... heaps.
     new_settings = { 'enzyme_version' => $system_settings.version }
     current_hash = new_settings
@@ -68,12 +63,12 @@ module Config extend self
     $settings = $settings.deep_merge(new_settings)
 
     # Reload the settings to avoid including temporary settings.
-    settings = YAML.load_file($system_settings.config[file].path) || {}
+    settings = YAML.load_file(path) || {}
     # Merge in the new settings.
     settings = settings.deep_merge(new_settings)
 
     # Save the settings to the config file.
-    write($system_settings.config[file].path, settings)
+    write(path, settings)
   end
 
   def write(path, settings)
