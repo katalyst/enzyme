@@ -35,9 +35,9 @@ module Create extend self
     commit_repo "#{directory}/resources"
     detach_repo "#{directory}/resources"
 
-    create_repo "#{directory}/working"
-    commit_repo "#{directory}/working"
-    detach_repo "#{directory}/working"
+    create_repo "#{directory}/production"
+    commit_repo "#{directory}/production"
+    detach_repo "#{directory}/production"
 
     puts "Created remote project at:"
     puts
