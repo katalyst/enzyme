@@ -26,7 +26,7 @@ module Sync extend self
     system "git pull > /dev/null"
     system "git push > /dev/null"
 
-    # SHARED
+    # RESOURCES
 
     unless skip_resources
       system "cd #{directory}/resources"
@@ -39,7 +39,7 @@ module Sync extend self
       system "git push > /dev/null"
     end
 
-    # WORKING
+    # PRODUCTION
 
     system "cd #{directory}/production"
     Dir.chdir("#{directory}/production")
