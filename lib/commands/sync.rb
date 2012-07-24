@@ -3,8 +3,8 @@ require 'enzyme'
 module Sync extend self
 
   def run
-    skip_shared = !!ARGV.delete("--skip-shared")
-    skip_working = !!ARGV.delete("--skip-working")
+    skip_resources = !!ARGV.delete("--skip-resources")
+    skip_production = !!ARGV.delete("--skip-production")
     ARGV.each { |x| raise UnknownOption.new(x) if x.start_with?("-") }
     project_name = ARGV.shift || $settings.project_name
     ARGV.each { |x| raise UnknownArgument.new(x) }
@@ -26,11 +26,11 @@ module Sync extend self
     system "git pull > /dev/null"
     system "git push > /dev/null"
 
-    # SHARED
+    # RESOURCES
 
-    unless skip_shared
-      system "cd #{directory}/shared"
-      Dir.chdir("#{directory}/shared")
+    unless skip_resources
+      system "cd #{directory}/resources"
+      Dir.chdir("#{directory}/resources")
 
       system "git checkout -q . > /dev/null"
       system "git add . > /dev/null"
@@ -39,10 +39,10 @@ module Sync extend self
       system "git push > /dev/null"
     end
 
-    # WORKING
+    # PRODUCTION
 
-    system "cd #{directory}/working"
-    Dir.chdir("#{directory}/working")
+    system "cd #{directory}/production"
+    Dir.chdir("#{directory}/production")
 
     system "git add #{$settings.short_name} > /dev/null"
     system "git add -u > /dev/null"
@@ -62,7 +62,7 @@ Enzyme.register('sync', Sync) do
   puts '     Options:'
   puts
   puts "     #{$format.bold}<project_name>#{$format.normal}"
-  puts '             The name of the project to sync. If the working directory is the root of a project this option does not need to be passed.'
+  puts '             The name of the project to sync. If the production directory is the root of a project this option does not need to be passed.'
   puts
   puts "#{$format.bold}EXAMPLES#{$format.normal}"
   puts '     You can run sync like this:'
@@ -72,6 +72,6 @@ Enzyme.register('sync', Sync) do
   puts
   puts '     cd ~/Projects/my_project'
   puts '     enzyme sync'
-  puts '             When the working directory is the root of a project you can run sync without any arguments.'
+  puts '             When the production directory is the root of a project you can run sync without any arguments.'
   puts
 end

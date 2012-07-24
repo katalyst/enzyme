@@ -4,8 +4,8 @@ require 'commands/config'
 module Join extend self
 
   def run()
-    # --skip-shared
-    # --skip-working
+    # --skip-resources
+    # --skip-production
     ARGV.each { |x| raise UnknownOption.new(x) if x.start_with?("-") }
     project_name = ARGV.shift
     ARGV.each { |x| raise UnknownArgument.new(x) }
@@ -30,16 +30,16 @@ module Join extend self
     # If the remote project directory doesn't exists, raise an error.
     raise CannotFindProject.new(remote_directory) unless File.directory?(remote_directory)
 
-    # Clone the shared and working directories.
+    # Clone the resources and production directories.
     system "git clone -q #{remote_directory} #{local_directory}"
     system "cd #{local_directory}; git checkout -q master;"
-    system "git clone -q #{remote_directory}/shared #{local_directory}/shared"
-    system "cd #{local_directory}/shared; git checkout -q master;"
-    system "git clone -q #{remote_directory}/working #{local_directory}/working"
-    system "cd #{local_directory}/working; git checkout -q master;"
+    system "git clone -q #{remote_directory}/resources #{local_directory}/resources"
+    system "cd #{local_directory}/resources; git checkout -q master;"
+    system "git clone -q #{remote_directory}/production #{local_directory}/production"
+    system "cd #{local_directory}/production; git checkout -q master;"
 
-    # Create the user's working directory unless it's already there.
-    system "mkdir #{local_directory}/working/#{$settings.short_name}" unless File.directory?("#{local_directory}/working/#{$settings.short_name}")
+    # Create the user's production directory unless it's already there.
+    system "mkdir #{local_directory}/production/#{$settings.short_name}" unless File.directory?("#{local_directory}/production/#{$settings.short_name}")
 
     puts "Joined the '#{project_name}' project at:"
     puts
