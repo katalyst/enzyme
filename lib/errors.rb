@@ -33,6 +33,7 @@ end
 class ConfigFileNotFound < StandardError
 
   def initialize(path)
+    path = File.expand_path(path)
     super("Config file could not be found at '#{path}'.")
   end
 
@@ -49,6 +50,7 @@ end
 class ProjectAlreadyExists < StandardError
 
   def initialize(path)
+    path = File.expand_path(path)
     super("A project already exists at '#{path}'.")
   end
 
@@ -57,6 +59,7 @@ end
 class CannotFindProject < StandardError
 
   def initialize(path)
+    path = File.expand_path(path)
     super("Cannot find a project at '#{path}'.")
   end
 

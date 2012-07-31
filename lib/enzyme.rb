@@ -9,8 +9,6 @@ module Enzyme extend self
     # Otherwise, assume the command is the first argument passed.
     command = ARGV.delete((ARGV & [ "-h", "--help" ]).first) ? 'help' : ARGV.shift
 
-    puts
-
     # Show info, help or run the requested command if it has been registered.
     begin
       if command.nil? || command.eql?('info')
@@ -42,13 +40,13 @@ module Enzyme extend self
     puts '+-------------------------------------------------+'
     puts
     puts "#{$format.bold}DESCRIPTION#{$format.normal}"
-    puts '     Katalyst\'s project collaboration tool.'
+    puts '       Katalyst\'s project collaboration tool.'
     puts
     puts "#{$format.bold}VERSION#{$format.normal}"
-    puts "     #{$system_settings.version}"
+    puts "       #{$system_settings.version}"
     puts
-    puts "Run `enzyme help` for usage."
-    puts
+    puts "#{$format.bold}HELP#{$format.normal}"
+    puts "       $ enzyme help"
   end
 
   def help
@@ -64,22 +62,21 @@ module Enzyme extend self
       end
     else
       puts "#{$format.bold}SYNOPSIS#{$format.normal}"
-      puts '     enzyme <command> [<options>]'
+      puts '       enzyme <command> [<options>]'
       puts
       puts "#{$format.bold}HELP#{$format.normal}"
-      puts '     enzyme help [<command>]'
-      puts '     enzyme [<command>] --help'
-      puts '     enzyme [<command>] -h'
+      puts '       enzyme help [<command>]'
+      puts '       enzyme [<command>] --help'
+      puts '       enzyme [<command>] -h'
       puts
       puts "#{$format.bold}COMMANDS#{$format.normal}"
 
-      ([ "info" ]+@@commands.keys).sort.each { |command| puts "     #{command}" }
+      ([ "info" ]+@@commands.keys).sort.each { |command| puts "       #{command}" }
 
       puts
       puts "#{$format.bold}DEBUGGING#{$format.normal}"
-      puts '     Use `--trace` at anytime to get full stacktraces.'
-      puts '     Use `--skip-sync-server` to prevent the sync server from mounting automatically.'
-      puts
+      puts '       Use `--trace` at anytime to get full stacktraces.'
+      puts '       Use `--skip-sync-server` to prevent the sync server from mounting automatically.'
     end
   end
 
@@ -88,9 +85,7 @@ module Enzyme extend self
       raise error
     else
       puts "#{$format.bold}ERROR: #{error}#{$format.normal}"
-      puts
-      puts '  Run `enzyme help` for help or use the `--trace` option to get a full stacktrace.'
-      puts
+      puts '       Run `enzyme help` for help or use the `--trace` option to get a full stacktrace.'
     end
   end
 

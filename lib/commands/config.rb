@@ -3,7 +3,7 @@ require 'enzyme'
 module Config extend self
 
   def run()
-    file = ['--global', '--organisation', '--project'].keep_if { |x| ARGV.delete(x) }.last.to_s[/[a-z]+$/] || nil
+    file = ARGV.delete((ARGV & ['--global', '--organisation', '--project']).first)
     ARGV.each { |x| raise UnknownOption.new(x) if x.start_with?("-") }
     key = ARGV.shift
     value = ARGV.shift
@@ -12,7 +12,7 @@ module Config extend self
     if file.nil?
       file = $system_settings.config.project.exists ? "project" : "global"
     else
-      file = file.to_s
+      file = file.to_s[/[a-z]+$/]
     end
 
     raise ConfigFileNotFound.new($system_settings.config[file].path) unless $system_settings.config[file].exists
@@ -24,20 +24,21 @@ module Config extend self
       puts "Set '#{key}' to '#{value}' in '#{path}'."
     else
       val = get(key, path)
-      if val.is_a?(Array) || val.is_a?(Hash)
+      if val.nil?
+        puts "<nil>"
+      elsif val.is_a?(Array) || val.is_a?(Hash)
         puts val.to_hash.to_yaml
       else
         puts val.to_s
       end
     end
-    puts
   end
 
   # Gets the value of a given setting.
   # - key: The setting to get.
   # - path: The path to the config file to get the setting from.
   def get(key, path)
-    s = file ? (YAML.load_file(path) || {}) : $settings
+    s = path ? (YAML.load_file(path) || {}) : $settings
     key.to_s.split('.').each do |o|
       return nil if s[o].nil?
       s = s[o]
@@ -82,17 +83,30 @@ end
 
 Enzyme.register('config', Config) do
   puts "#{$format.bold}SYNOPSIS#{$format.normal}"
-  puts '     enzyme config [<key> [<value> [--global]]]'
+  puts '       enzyme config [--global|--organisation|--project]'
+  puts '       enzyme config <key> [--global|--organisation|--project]'
+  puts '       enzyme config <key> <value> [--global|--organisation|--project]'
+  puts
+  puts "#{$format.bold}DESCRIPTION#{$format.normal}"
+  puts "       In its first form the config command dumps the settings."
+  puts
+  puts "       In its second form the config command prints the value of a given key."
+  puts
+  puts "       In its third form the config command sets the value of a given key."
   puts
   puts "#{$format.bold}EXAMPLES#{$format.normal}"
-  puts '     enzyme config user dave --global'
+  puts "        1. Get the value of the 'short_name' setting:"
   puts
-  puts '     enzyme config user'
-  puts '     > dave'
+  puts "               $ enzyme config short_name"
+  puts "               dave"
   puts
-  puts '     enzyme config project_name my_project'
+  puts "        2. Set the value of the 'short_name' setting:"
   puts
-  puts '     enzyme config project_name'
-  puts '     > my_project'
+  puts "               $ enzyme config short_name jill"
+  puts "               Set 'short_name' to 'jill' in '/Users/jill/.enzyme.yml'."
   puts
+  puts "        3. Get the value of the 'sync.projects_directory' setting in the organisation config file:"
+  puts
+  puts "               $ enzyme config sync.projects_directory --organisation"
+  puts "               Projects"
 end
