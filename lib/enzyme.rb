@@ -5,17 +5,15 @@ module Enzyme extend self
   @@commands = {}
 
   def run
-    # Only shift the first argument off the ARGV if help flags haven't been passed.
-    command = (ARGV.delete("-h") || ARGV.delete("--help")) ? 'help' : ARGV.shift
+    # If "-h" or "--help" was passed, delete the first one found and set the command to "help".
+    # Otherwise, assume the command is the first argument passed.
+    command = ARGV.delete((ARGV & [ "-h", "--help" ]).first) ? 'help' : ARGV.shift
 
     puts
 
     # Show info, help or run the requested command if it has been registered.
     begin
-      if command.nil?
-        info
-        help
-      elsif command.eql?('info')
+      if command.nil? || command.eql?('info')
         info
       elsif command.eql?('help')
         help
@@ -32,6 +30,9 @@ module Enzyme extend self
   end
 
   def info
+    ARGV.each { |x| raise UnknownOption.new(x) if x.start_with?("-") }
+    ARGV.each { |x| raise UnknownArgument.new(x) }
+
     puts '+-------------------------------------------------+'
     puts '| #####  ##  ##  ######  ##   ##  ##    ##  ##### |'
     puts '| ##     ### ##     ##    ## ##   ###  ###  ##    |'
@@ -46,11 +47,14 @@ module Enzyme extend self
     puts "#{$format.bold}VERSION#{$format.normal}"
     puts "     #{$system_settings.version}"
     puts
+    puts "Run `enzyme help` for usage."
+    puts
   end
 
   def help
-    ARGV.reject { |x| x.start_with?("-") }
+    ARGV.each { |x| raise UnknownOption.new(x) if x.start_with?("-") }
     command = ARGV.shift
+    ARGV.each { |x| raise UnknownArgument.new(x) }
 
     if command
       if @@commands.include?(command.to_s.downcase)
