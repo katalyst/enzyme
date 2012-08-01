@@ -46,7 +46,9 @@ module Enzyme extend self
     puts "       #{$system_settings.version}"
     puts
     puts "#{$format.bold}HELP#{$format.normal}"
-    puts "       $ enzyme help"
+    puts "       Run this command to get help:"
+    puts
+    puts "               $ enzyme help"
   end
 
   def help
@@ -84,8 +86,10 @@ module Enzyme extend self
     if $system_settings.trace_errors
       raise error
     else
-      puts "#{$format.bold}ERROR: #{error}#{$format.normal}"
-      puts '       Run `enzyme help` for help or use the `--trace` option to get a full stacktrace.'
+      puts "#{$format.bold}ERROR#{$format.normal}"
+      puts "       #{error}"
+      puts
+      puts "       Run `enzyme help` for help or use the `--trace` option to get a full stacktrace."
     end
   end
 

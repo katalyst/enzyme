@@ -26,23 +26,32 @@ module Create extend self
     # If the project already exists, raise an error.
     raise ProjectAlreadyExists.new(directory) if File.directory?(directory)
 
+    puts "Creating remote project at '#{directory}'..."
+
     create_repo directory, [ "*", "!.enzyme.yml", "!.gitignore" ]
+    print "."
     Config.write("#{directory}/.enzyme.yml", { "project_name" => project_name })
+    print "."
     commit_repo directory
+    print "."
     detach_repo directory
+    print "."
 
     create_repo "#{directory}/resources"
+    print "."
     commit_repo "#{directory}/resources"
+    print "."
     detach_repo "#{directory}/resources"
+    print "."
 
     create_repo "#{directory}/production"
+    print "."
     commit_repo "#{directory}/production"
+    print "."
     detach_repo "#{directory}/production"
+    puts
 
-    puts "Created remote project at:"
-    puts
-    puts "    #{directory}"
-    puts
+    puts "Done."
   end
 
   def create_repo(path, gitignore=[])
@@ -87,14 +96,20 @@ end
 
 Enzyme.register('create', Create) do
   puts "#{$format.bold}SYNOPSIS#{$format.normal}"
-  puts '     enzyme create <project_name>'
+  puts "       enzyme create <project_name> [--skip-join]"
+  puts
+  puts "#{$format.bold}DESCRIPTION#{$format.normal}"
+  puts "       Creates a project on the sync server and (if --skip-join hasn't been passed) joins the"
+  puts "       project using the `enzyme join` command."
   puts
   puts "#{$format.bold}EXAMPLES#{$format.normal}"
-  puts '     > enzyme create example-project'
-  puts '     '
-  puts '     Created local project at:'
-  puts '     '
-  puts '       `/Users/jane/Projects/example-project`'
-  puts '     '
+  puts "       Creating a project called 'abc':"
   puts
+  puts "               $ enzyme create abc"
+  puts "               Creating remote project at '/Volumes/Shared/Projects/abc'..."
+  puts "               ........"
+  puts "               Done."
+  puts "               Joining the 'abc' project at '/Volumes/Shared/Projects/abc'..."
+  puts "               ......"
+  puts "               Done."
 end
