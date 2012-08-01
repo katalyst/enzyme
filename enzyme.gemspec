@@ -5,7 +5,7 @@
 
 Gem::Specification.new do |s|
   s.name = %q{enzyme}
-  s.version = "1.0.0.beta03"
+  s.version = "1.0.0.beta04"
 
   s.required_rubygems_version = Gem::Requirement.new("> 1.3.1") if s.respond_to? :required_rubygems_version=
   s.authors = [%q{Haydn Ewers}]
@@ -20,9 +20,11 @@ Gem::Specification.new do |s|
   s.files = [
     "VERSION",
     "bin/enzyme",
+    "enzyme-manual.pdf",
     "lib/commands/config.rb",
     "lib/commands/create.rb",
     "lib/commands/join.rb",
+    "lib/commands/man.rb",
     "lib/commands/sync.rb",
     "lib/enzyme.rb",
     "lib/errors.rb",
