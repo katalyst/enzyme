@@ -21,9 +21,11 @@ Jeweler::Tasks.new do |gem|
   gem.authors = ["Haydn Ewers"]
   gem.files = [
     "bin/enzyme",
+    "enzyme-manual.pdf",
     "lib/commands/config.rb",
     "lib/commands/create.rb",
     "lib/commands/join.rb",
+    "lib/commands/man.rb",
     "lib/commands/sync.rb",
     "lib/enzyme.rb",
     "lib/errors.rb",
