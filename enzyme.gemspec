@@ -5,7 +5,7 @@
 
 Gem::Specification.new do |s|
   s.name = %q{enzyme}
-  s.version = "1.0.0.beta02"
+  s.version = File.read(File.join(File.dirname(__FILE__), 'VERSION'))
 
   s.required_rubygems_version = Gem::Requirement.new("> 1.3.1") if s.respond_to? :required_rubygems_version=
   s.authors = [%q{Haydn Ewers}]
