@@ -59,7 +59,7 @@ if !$system_settings.sync_server.skip && $settings.sync.host_name && $settings.s
   # Mount the sync server if it isn't already there.
   unless File.directory?($system_settings.sync_server.path)
     `mkdir #{$system_settings.sync_server.path}`
-    `mount -t afp #{afp_url} #{$system_settings.sync_server.path} > /dev/null` # > /dev/null is to suppress output
+    `mount -t afp #{afp_url} #{$system_settings.sync_server.path} &> /dev/null`
     `rm -r \"/Volumes/#{$settings.sync.share_name}\"` if $? != 0
   end
 

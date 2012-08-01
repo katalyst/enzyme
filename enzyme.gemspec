@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = %q{enzyme}
-  s.version = "1.0.0.beta01"
+  s.version = "1.0.0.beta02"
 
   s.required_rubygems_version = Gem::Requirement.new("> 1.3.1") if s.respond_to? :required_rubygems_version=
   s.authors = [%q{Haydn Ewers}]
-  s.date = %q{2012-05-07}
+  s.date = %q{2012-07-24}
   s.description = %q{Enzyme is a tool to make collaborating on projects easier. Developed by Katalyst Interactive.}
   s.email = %q{haydn@katalyst.com.au}
   s.executables = [%q{enzyme}]

@@ -5,17 +5,13 @@ module Enzyme extend self
   @@commands = {}
 
   def run
-    # Only shift the first argument off the ARGV if help flags haven't been passed.
-    command = (ARGV.delete("-h") || ARGV.delete("--help")) ? 'help' : ARGV.shift
-
-    puts
+    # If "-h" or "--help" was passed, delete the first one found and set the command to "help".
+    # Otherwise, assume the command is the first argument passed.
+    command = ARGV.delete((ARGV & [ "-h", "--help" ]).first) ? 'help' : ARGV.shift
 
     # Show info, help or run the requested command if it has been registered.
     begin
-      if command.nil?
-        info
-        help
-      elsif command.eql?('info')
+      if command.nil? || command.eql?('info')
         info
       elsif command.eql?('help')
         help
@@ -32,6 +28,9 @@ module Enzyme extend self
   end
 
   def info
+    ARGV.each { |x| raise UnknownOption.new(x) if x.start_with?("-") }
+    ARGV.each { |x| raise UnknownArgument.new(x) }
+
     puts '+-------------------------------------------------+'
     puts '| #####  ##  ##  ######  ##   ##  ##    ##  ##### |'
     puts '| ##     ### ##     ##    ## ##   ###  ###  ##    |'
@@ -41,16 +40,21 @@ module Enzyme extend self
     puts '+-------------------------------------------------+'
     puts
     puts "#{$format.bold}DESCRIPTION#{$format.normal}"
-    puts '     Katalyst\'s project collaboration tool.'
+    puts '       Katalyst\'s project collaboration tool.'
     puts
     puts "#{$format.bold}VERSION#{$format.normal}"
-    puts "     #{$system_settings.version}"
+    puts "       #{$system_settings.version}"
     puts
+    puts "#{$format.bold}HELP#{$format.normal}"
+    puts "       Run this command to get help:"
+    puts
+    puts "               $ enzyme help"
   end
 
   def help
-    ARGV.reject { |x| x.start_with?("-") }
+    ARGV.each { |x| raise UnknownOption.new(x) if x.start_with?("-") }
     command = ARGV.shift
+    ARGV.each { |x| raise UnknownArgument.new(x) }
 
     if command
       if @@commands.include?(command.to_s.downcase)
@@ -60,22 +64,21 @@ module Enzyme extend self
       end
     else
       puts "#{$format.bold}SYNOPSIS#{$format.normal}"
-      puts '     enzyme <command> [<options>]'
+      puts '       enzyme <command> [<options>]'
       puts
       puts "#{$format.bold}HELP#{$format.normal}"
-      puts '     enzyme help [<command>]'
-      puts '     enzyme [<command>] --help'
-      puts '     enzyme [<command>] -h'
+      puts '       enzyme help [<command>]'
+      puts '       enzyme [<command>] --help'
+      puts '       enzyme [<command>] -h'
       puts
       puts "#{$format.bold}COMMANDS#{$format.normal}"
 
-      ([ "info" ]+@@commands.keys).sort.each { |command| puts "     #{command}" }
+      ([ "info" ]+@@commands.keys).sort.each { |command| puts "       #{command}" }
 
       puts
       puts "#{$format.bold}DEBUGGING#{$format.normal}"
-      puts '     Use `--trace` at anytime to get full stacktraces.'
-      puts '     Use `--skip-sync-server` to prevent the sync server from mounting automatically.'
-      puts
+      puts '       Use `--trace` at anytime to get full stacktraces.'
+      puts '       Use `--skip-sync-server` to prevent the sync server from mounting automatically.'
     end
   end
 
@@ -83,10 +86,10 @@ module Enzyme extend self
     if $system_settings.trace_errors
       raise error
     else
-      puts "#{$format.bold}ERROR: #{error}#{$format.normal}"
+      puts "#{$format.bold}ERROR#{$format.normal}"
+      puts "       #{error}"
       puts
-      puts '  Run `enzyme help` for help or use the `--trace` option to get a full stacktrace.'
-      puts
+      puts "       Run `enzyme help` for help or use the `--trace` option to get a full stacktrace."
     end
   end
 
