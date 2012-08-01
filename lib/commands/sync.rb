@@ -11,67 +11,116 @@ module Sync extend self
 
     raise ArgumentOrSettingMissing.new("project_name", "project_name") unless project_name
     raise SettingMissing.new("projects_directory") unless $settings.projects_directory
+    raise SettingMissing.new("short_name") unless $settings.short_name
 
     directory = "#{$settings.projects_directory}/#{project_name}"
 
     raise CannotFindProject.new(directory) unless File.directory?(directory)
 
+    puts "Syncing project '#{project_name}' at '#{directory}'..."
+
     # BASE
 
     system "cd #{directory}"
     Dir.chdir("#{directory}")
+    print "."
 
-    system "git add .enzyme.yml > /dev/null"
-    system "git commit -m 'Enzyme sync.'"
-    system "git pull > /dev/null"
-    system "git push > /dev/null"
+    system "git add .enzyme.yml &> /dev/null"
+    print "."
+    system "git commit -q -m 'Enzyme sync.' &> /dev/null"
+    print "."
+    system "git pull -q &> /dev/null"
+    print "."
+    system "git push -q &> /dev/null"
+    puts
 
     # RESOURCES
 
     unless skip_resources
+      # TODO: Check if the directory exists.
+
+      puts "Syncing resources directory..."
+
       system "cd #{directory}/resources"
       Dir.chdir("#{directory}/resources")
+      print "."
 
-      system "git checkout -q . > /dev/null"
-      system "git add . > /dev/null"
-      system "git commit -m 'Enzyme sync.'"
-      system "git pull > /dev/null"
-      system "git push > /dev/null"
+      system "git checkout -q . &> /dev/null"
+      print "."
+      system "git add . &> /dev/null"
+      print "."
+      system "git commit -q -m 'Enzyme sync.' &> /dev/null"
+      print "."
+      system "git pull -q &> /dev/null"
+      print "."
+      system "git push -q &> /dev/null"
+      puts
     end
 
     # PRODUCTION
 
-    system "cd #{directory}/production"
-    Dir.chdir("#{directory}/production")
+    unless skip_production
+      # TODO: Check if the directory exists.
 
-    system "git add #{$settings.short_name} > /dev/null"
-    system "git add -u > /dev/null"
-    system "git commit -a -m 'Enzyme sync.'"
-    system "git clean -fd > /dev/null"
-    system "git pull > /dev/null"
-    system "git push > /dev/null"
+      puts "Syncing production directory..."
+
+      system "cd #{directory}/production"
+      Dir.chdir("#{directory}/production")
+      print "."
+
+      system "git add #{$settings.short_name} &> /dev/null"
+      print "."
+      system "git add -u &> /dev/null"
+      print "."
+      system "git commit -q -a -m 'Enzyme sync.' &> /dev/null"
+      print "."
+      system "git clean -fd &> /dev/null"
+      print "."
+      system "git pull -q &> /dev/null"
+      print "."
+      system "git push -q &> /dev/null"
+      puts
+    end
+
+    puts "Done."
   end
 
 end
 
 Enzyme.register('sync', Sync) do
   puts "#{$format.bold}SYNOPSIS#{$format.normal}"
-  puts '     enzyme sync [<project_name>] [--discard-changes] [--init]'
+  puts "       enzyme sync [<project_name>] [--skip-resources] [--skip-production]"
   puts
   puts "#{$format.bold}DESCRIPTION#{$format.normal}"
-  puts '     Options:'
+  puts "       Sync either the current project or a specified project with the sync server."
   puts
-  puts "     #{$format.bold}<project_name>#{$format.normal}"
-  puts '             The name of the project to sync. If the production directory is the root of a project this option does not need to be passed.'
+  puts "       Any changes in the production directory outside of the current user's production directory"
+  puts "       will be discarded."
+  puts
+  puts "       Only additions to the the resources directory will be kept. Any modifications to exsiting"
+  puts "       references will be lost."
   puts
   puts "#{$format.bold}EXAMPLES#{$format.normal}"
-  puts '     You can run sync like this:'
+  puts "        1. Syncing a specific project:"
   puts
-  puts '     enzyme sync another_project'
-  puts '             If you specify a project you can run sync from anywhere.'
+  puts "               $ enzyme sync abc"
+  puts "               Syncing project 'abc' at '/Users/jane/Projects/abc'..."
+  puts "               ...."
+  puts "               Syncing resources directory..."
+  puts "               ....."
+  puts "               Syncing production directory..."
+  puts "               ......"
+  puts "               Done."
   puts
-  puts '     cd ~/Projects/my_project'
-  puts '     enzyme sync'
-  puts '             When the production directory is the root of a project you can run sync without any arguments.'
+  puts "        2. Syncing the current project:"
   puts
+  puts "               $ cd /Users/jane/Projects/abc"
+  puts "               $ enzyme sync"
+  puts "               Syncing project 'abc' at '/Users/jane/Projects/abc'..."
+  puts "               ...."
+  puts "               Syncing resources directory..."
+  puts "               ....."
+  puts "               Syncing production directory..."
+  puts "               ......"
+  puts "               Done."
 end

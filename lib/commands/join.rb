@@ -33,21 +33,23 @@ module Join extend self
     puts "Joining the '#{project_name}' project at '#{local_directory}'..."
 
     # Clone the resources and production directories.
-    system "git clone -q #{remote_directory} #{local_directory}"
+    system "git clone -q #{remote_directory} #{local_directory} &> /dev/null"
     print "."
-    system "cd #{local_directory}; git checkout -q master;"
+    system "cd #{local_directory}; git checkout -q master &> /dev/null;"
     print "."
-    system "git clone -q #{remote_directory}/resources #{local_directory}/resources"
+    system "git clone -q #{remote_directory}/resources #{local_directory}/resources &> /dev/null"
     print "."
-    system "cd #{local_directory}/resources; git checkout -q master;"
+    system "cd #{local_directory}/resources; git checkout -q master &> /dev/null;"
     print "."
-    system "git clone -q #{remote_directory}/production #{local_directory}/production"
+    system "git clone -q #{remote_directory}/production #{local_directory}/production &> /dev/null"
     print "."
-    system "cd #{local_directory}/production; git checkout -q master;"
+    system "cd #{local_directory}/production; git checkout -q master &> /dev/null;"
     print "."
 
     # Create the user's production directory unless it's already there.
     system "mkdir #{local_directory}/production/#{$settings.short_name}" unless File.directory?("#{local_directory}/production/#{$settings.short_name}")
+    print "."
+    system "touch #{local_directory}/production/#{$settings.short_name}/.gitkeep" unless File.exists?("#{local_directory}/production/#{$settings.short_name}/.gitkeep")
     puts
 
     puts "Done."
@@ -60,7 +62,7 @@ Enzyme.register('join', Join) do
   puts "       enzyme join <project_name>"
   puts
   puts "#{$format.bold}DESCRIPTION#{$format.normal}"
-  puts "       Joins a project by creatinga local version of a project from the sync server."
+  puts "       Joins a project by creating a local version of a project from the sync server."
   puts
   puts "#{$format.bold}EXAMPLES#{$format.normal}"
   puts "       Joining a project called 'abc':"

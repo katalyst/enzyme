@@ -56,40 +56,40 @@ module Create extend self
 
   def create_repo(path, gitignore=[])
     # Create the project's directory.
-    system "mkdir -p #{path} > /dev/null"
+    system "mkdir -p #{path} &> /dev/null"
 
     # Change into the directory.
-    system "cd #{path} > /dev/null"
+    system "cd #{path} &> /dev/null"
     Dir.chdir(path)
 
     # Gitify.
-    system "git init > /dev/null"
+    system "git init &> /dev/null"
     system "echo '#{gitignore.join("\n")}' > .gitignore"
   end
 
   def commit_repo(path)
     # Create the project's directory.
-    system "mkdir -p #{path} > /dev/null"
+    system "mkdir -p #{path} &> /dev/null"
 
     # Change into the directory.
-    system "cd #{path} > /dev/null"
+    system "cd #{path} &> /dev/null"
     Dir.chdir(path)
 
     # Gitify.
-    system "git add . > /dev/null"
-    system "git commit -m 'Initial commit.' > /dev/null"
+    system "git add . &> /dev/null"
+    system "git commit -m 'Initial commit.' &> /dev/null"
   end
 
   def detach_repo(path)
     # Create the project's directory.
-    system "mkdir -p #{path} > /dev/null"
+    system "mkdir -p #{path} &> /dev/null"
 
     # Change into the directory.
-    system "cd #{path} > /dev/null"
+    system "cd #{path} &> /dev/null"
     Dir.chdir(path)
 
     # Gitify.
-    system "git checkout -q --detach > /dev/null"
+    system "git checkout -q --detach &> /dev/null"
   end
 
 end
